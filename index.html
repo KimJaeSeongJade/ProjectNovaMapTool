@@ -970,16 +970,20 @@ function stageTsv(list, header) { return C.toDelimited(C.recordsToRows(list.map(
    gviz는 열마다 값의 타입을 추측해서, 한 열에 숫자와 글자가 섞이면 적은 쪽 값을 비운다.
    그래서 시트의 모든 탭은 서식을 "일반 텍스트"로 둔다(데이터 테이블 사양서 3절).
    ===================================================================== */
-const DEFAULT_SHEET = '1EaGgh49iS9Vnuw7LbAEE4GQ4IJApKMaz9c2itRYrzOA';   // ProjectNova_Data   // 팀 데이터 시트 주소나 ID를 넣어 두면 "시트 연결" 설정 없이 바로 쓴다
+const DEFAULT_SHEET = '1cwnKSlFLYT4simldHedgejRp7ZQ-L_sVK-OBZu3DI0k';   // ProjectNova_Data   // 팀 데이터 시트 주소나 ID를 넣어 두면 "시트 연결" 설정 없이 바로 쓴다
 const SHEET_KEY = 'projectnova_maptool_sheet';
+// 예전 기본 시트. 브라우저에 이 주소가 저장되어 있으면 새 DEFAULT_SHEET를 쓴다 (저장된 주소가 기본값 변경을 가리지 않게)
+const OLD_DEFAULT_SHEETS = ['1EaGgh49iS9Vnuw7LbAEE4GQ4IJApKMaz9c2itRYrzOA'];
 const SHEET_TABS = ['Gimmick', 'Meta', 'Chapter', 'Story', 'Stage'];   // 기믹을 먼저 읽어야 맵의 기믹 코드를 해석할 수 있다
 let sheetPending = null, jsonpSeq = 0;
 
 function sheetCfg() {
   let c = {}; try { c = JSON.parse(localStorage.getItem(SHEET_KEY) || '{}') || {}; } catch (e) { }
-  return { src: c.src != null ? c.src : DEFAULT_SHEET, auto: c.auto !== false };
+  const old = c.src != null && OLD_DEFAULT_SHEETS.includes(sheetIdOf(c.src));
+  return { src: c.src != null && !old ? c.src : DEFAULT_SHEET, auto: c.auto !== false };
 }
-function saveSheetCfg(c) { try { localStorage.setItem(SHEET_KEY, JSON.stringify(c)); } catch (e) { } }
+// 기본 시트와 같은 주소는 저장하지 않는다. 나중에 DEFAULT_SHEET를 바꾸면 그대로 따라가게
+function saveSheetCfg(c) { if (sheetIdOf(c.src) === DEFAULT_SHEET) c = { auto: c.auto }; try { localStorage.setItem(SHEET_KEY, JSON.stringify(c)); } catch (e) { } }
 function sheetIdOf(src) {
   const s = String(src || '').trim(), m = s.match(/\/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
   return m ? m[1] : (/^[A-Za-z0-9_-]{20,}$/.test(s) ? s : '');
